@@ -1,0 +1,36 @@
+name: Sync upstream daily
+
+on:
+  schedule:
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure upstream
+        run: |
+          git remote remove upstream 2>/dev/null || true
+          git remote add upstream https://github.com/byJoey/cfnew.git
+
+      - name: Merge upstream main
+        run: |
+          git fetch upstream main
+          git merge --no-edit upstream/main
+
+      - name: Push synchronized main
+        run: |
+          git push origin main
